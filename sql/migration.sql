@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS WITHOUT ROWID tag (
+    tag_id INT NOT NULL AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS task (
+    title VARCHAR(100) NOT NULL,
+    finish_date DATETIME NOT NULL,
+    tag_id INT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS current_task (
+    title VARCHAR(100) NOT NULL,
+    start_date DATETIME NOT NULL,
+    tag_id INT NOT NULL
+);
