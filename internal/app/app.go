@@ -11,10 +11,18 @@ type App struct {
 	smallBreakDuration time.Duration
 	bigBreakDuration   time.Duration
 	workDuration       time.Duration
+	repo               repo
 }
 
-func New(cfg *models.Config) *App {
-	return &App{}
+func New(settings *models.Settings, repo repo) *App {
+	return &App{
+		editorExecutable:   settings.EditorPath,
+		currentTaskFile:    settings.CurrentTasksPath,
+		smallBreakDuration: time.Duration(settings.Tomato.SmallBreakMinutes) * time.Minute,
+		bigBreakDuration:   time.Duration(settings.Tomato.BigBreakMinutes) * time.Minute,
+		workDuration:       time.Duration(settings.Tomato.WorkingMinutes) * time.Minute,
+		repo:               repo,
+	}
 }
 
 func (a *App) LoadTasks(filename string, forced bool) (err error) {
