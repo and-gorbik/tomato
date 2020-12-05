@@ -7,9 +7,9 @@ import (
 )
 
 type repo interface {
-	GetTasks() ([]models.TaskFromDB, error)
-	SaveTask(title, tag string, date time.Time) error
-	AddCurrentTask(title, tag string, date time.Time) error
-	GetCurrentTask() (models.TaskFromDB, error)
-	DeleteCurrentTask() error
+	GetTasks(user string) ([]models.TaskFromDB, error)
+	SaveTask(user, title, tag string, date time.Time) error
+	AddCurrentTask(user, title, tag string, date time.Time) error
+	GetCurrentTask(user string) (models.TaskFromDB, error)
+	DeleteCurrentTask(user string) error
 }
