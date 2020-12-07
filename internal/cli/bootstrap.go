@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"tomato/server/models"
+	"tomato/internal/models"
 )
 
 const (

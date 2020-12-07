@@ -1,10 +1,12 @@
 package cli
 
 import (
-	"tomato/server/app"
-	"tomato/server/repo"
+	"fmt"
 
 	"github.com/urfave/cli/v2"
+
+	"tomato/internal/app"
+	"tomato/internal/repo"
 )
 
 // New creates a new cli application
@@ -22,9 +24,21 @@ func New() *cli.App {
 	commands := []*cli.Command{
 		{
 			Name:  "load",
-			Usage: "Load task list from file",
+			Usage: "Load task list from `FILE`",
+
+			Flags: []cli.Flag{
+				// &cli.BoolFlag{
+				// 	Name:  "forced",
+				// 	Value: false,
+				// 	Usage: "tasks will be load even though current task list is not empty",
+				// },
+			},
 			Action: func(c *cli.Context) error {
-				return a.LoadTasks()
+				if c.NArg() < 1 {
+					return fmt.Errorf("%d", c.NArg())
+				}
+
+				return a.LoadTasks(c.Args().First(), true)
 			},
 		},
 		{
