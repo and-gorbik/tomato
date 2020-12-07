@@ -52,8 +52,8 @@ func (t *Task) Validate() (err error) {
 	return
 }
 
-type TaskFromDB struct {
-	Tag   string
+type TaskResponse struct {
+	Tag   *string
 	Title string
 	Date  string
 }

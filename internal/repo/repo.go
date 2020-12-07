@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"tomato/server/models"
+	"tomato/internal/models"
 )
 
 type Repo struct {
@@ -17,7 +17,7 @@ func New(dbconn *sql.DB) *Repo {
 	}
 }
 
-func (r *Repo) GetTasks(user string) ([]models.TaskFromDB, error) {
+func (r *Repo) GetTasks(user string) ([]models.TaskResponse, error) {
 	rows, err := r.dbConn.Query(sqliteQueryGetTasks, user)
 	if err != nil {
 		return nil, err
@@ -25,9 +25,9 @@ func (r *Repo) GetTasks(user string) ([]models.TaskFromDB, error) {
 
 	defer rows.Close()
 
-	tasks := make([]models.TaskFromDB, 0)
+	tasks := make([]models.TaskResponse, 0)
 	for rows.Next() {
-		var t models.TaskFromDB
+		var t models.TaskResponse
 		if err := rows.Scan(&t.Title, &t.Tag, &t.Date); err != nil {
 			return nil, err
 		}
@@ -50,20 +50,20 @@ func (r *Repo) AddCurrentTask(user, title, tag string, date time.Time) error {
 	return r.saveTask(sqliteQueryAddCurrentTask, title, tag, user, date)
 }
 
-func (r *Repo) GetCurrentTask(user string) (models.TaskFromDB, error) {
+func (r *Repo) GetCurrentTask(user string) (models.TaskResponse, error) {
 	rows, err := r.dbConn.Query(sqliteQueryGetCurrentTask, user)
 	if err != nil {
-		return models.TaskFromDB{}, err
+		return models.TaskResponse{}, err
 	}
 
 	defer rows.Close()
 	if !rows.Next() {
-		return models.TaskFromDB{}, nil
+		return models.TaskResponse{}, nil
 	}
 
-	var task models.TaskFromDB
+	var task models.TaskResponse
 	if err := rows.Scan(&task.Title, &task.Tag, &task.Date); err != nil {
-		return models.TaskFromDB{}, nil
+		return models.TaskResponse{}, nil
 	}
 
 	return task, nil
