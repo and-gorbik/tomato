@@ -19,7 +19,7 @@ func New() *cli.App {
 	cfg := initConfig()
 	settings := initSettings(cfg.SettingsPath)
 	r := repo.New(initDBConnection(cfg.DBPath))
-	a := app.New(settings, r)
+	a := app.New(settings, r, getCurrentUser())
 
 	commands := []*cli.Command{
 		{

@@ -1,29 +1,33 @@
 package app
 
 import (
-	"encoding/csv"
 	"fmt"
-	"io"
 	"os"
+	"os/exec"
+	"time"
+
+	"tomato/internal/infrastructure"
 	"tomato/internal/models"
 )
 
 type App struct {
 	repo              repo
+	taskfile          TaskFile
+	user              string
 	defaultTag        string
 	editorPath        string
-	currentTasksPath  string
 	smallBreakMinutes int
 	bigBreakMinutes   int
 	workingMinutes    int
 }
 
-func New(settings *models.Settings, repo repo) *App {
+func New(settings *models.Settings, repo repo, user string) *App {
 	return &App{
 		repo:              repo,
+		user:              user,
+		taskfile:          TaskFile{Path: settings.CurrentTasksPath},
 		defaultTag:        settings.DefaultTag,
 		editorPath:        settings.EditorPath,
-		currentTasksPath:  settings.CurrentTasksPath,
 		smallBreakMinutes: settings.Tomato.SmallBreakMinutes,
 		bigBreakMinutes:   settings.Tomato.BigBreakMinutes,
 		workingMinutes:    settings.Tomato.WorkingMinutes,
@@ -31,58 +35,72 @@ func New(settings *models.Settings, repo repo) *App {
 }
 
 func (a *App) LoadTasks(fname string, forced bool) (err error) {
-	src, err := os.Open(fname)
-	if err != nil {
-		return
-	}
+	return a.taskfile.Load(fname, forced)
+}
 
-	if _, err = csv.NewReader(src).ReadAll(); err != nil {
+func (a *App) EditTasks() error {
+	cmd := exec.Command(a.editorPath, a.taskfile.Path)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Start(); err != nil {
 		return err
 	}
 
-	if _, err = src.Seek(0, 0); err != nil {
+	if err := cmd.Wait(); err != nil {
 		return err
 	}
 
-	defer src.Close()
+	return nil
+}
 
-	dst, err := os.OpenFile(a.currentTasksPath, os.O_CREATE|os.O_RDWR, 0644)
+func (a *App) StartTask() error {
+	t, err := a.taskfile.Next()
 	if err != nil {
-		return
+		return err
 	}
 
-	defer dst.Close()
+	if err = a.repo.AddCurrentTask(a.user, t.Title, t.Tag, time.Now()); err != nil {
+		return err
+	}
 
-	dstInfo, err := dst.Stat()
+	return infrastructure.PlanNotifies()
+}
+
+func (a *App) StopTask() error {
+	t, err := a.repo.GetCurrentTask(a.user)
 	if err != nil {
-		return
+		return err
 	}
 
-	if dstInfo.Size() != 0 && !forced {
-		err = fmt.Errorf("Current tasks is not finished")
-		return
+	if err = a.taskfile.Prepend(t.Title, t.Tag); err != nil {
+		return err
 	}
 
-	_, err = io.Copy(dst, src)
-	return
+	if err := a.repo.DeleteCurrentTask(a.user); err != nil {
+		return err
+	}
+
+	return infrastructure.RemoveNotifies()
 }
 
-func (a *App) EditTasks() (err error) {
-	return
+func (a *App) GetLog() error {
+	tasks, err := a.repo.GetTasks(a.user)
+	if err != nil {
+		return err
+	}
+
+	for _, t := range tasks {
+		tag := ""
+		if t.Tag != nil {
+			tag = *t.Tag
+		}
+		fmt.Printf("%s\t\t%s\t\t%v\n", t.Title, tag, t.Date)
+	}
+
+	return nil
 }
 
-func (a *App) StartTask() (err error) {
-	return
-}
-
-func (a *App) StopTask() (err error) {
-	return
-}
-
-func (a *App) GetLog() (err error) {
-	return
-}
-
-func (a *App) GetCurrentTasks() (err error) {
-	return
+func (a *App) GetCurrentTasks() error {
+	return a.taskfile.Print()
 }

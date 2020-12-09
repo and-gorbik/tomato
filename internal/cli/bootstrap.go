@@ -4,13 +4,16 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"os/user"
+	"path/filepath"
 
 	"tomato/internal/models"
 )
 
 const (
-	ConfigPathEnv     = "TOMATO_CONFIG_PATH"
-	DefaultConfigPath = "/etc/tomato/config.yaml"
+	ConfigPathEnv      = "TOMATO_CONFIG_PATH"
+	DefaultConfigPath  = "/etc/tomato/config.yaml"
+	DefaultCurrentPath = ".tomato/data/currentTasks~"
 )
 
 func initConfig() *models.Config {
@@ -42,7 +45,24 @@ func initSettings(path string) *models.Settings {
 		log.Fatal(err)
 	}
 
+	if settings.EditorPath == "" {
+		settings.EditorPath = os.Getenv("EDITOR")
+	}
+
+	if settings.CurrentTasksPath == "" {
+		settings.CurrentTasksPath = filepath.Join(os.Getenv("HOME"), DefaultCurrentPath)
+	}
+
 	return &settings
+}
+
+func getCurrentUser() string {
+	u, err := user.Current()
+	if err != nil {
+		log.Fatal(u)
+	}
+
+	return u.Username
 }
 
 func readYaml(path string, obj interface{}) error {
