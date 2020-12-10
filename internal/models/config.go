@@ -1,14 +1,10 @@
 package models
 
 type Config struct {
-	SettingsPath string `yaml:"settings_path"`
-	DBPath       string `yaml:"db_path"`
-}
-
-type Settings struct {
 	DefaultTag       string `yaml:"default_tag"`
 	EditorPath       string `yaml:"editor_path"`
 	CurrentTasksPath string `yaml:"current_tasks_path"`
+	DBPath           string `yaml:"db_path"`
 	Tomato           Tomato `yaml:"tomato"`
 }
 

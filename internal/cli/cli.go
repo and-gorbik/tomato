@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/urfave/cli/v2"
 
@@ -9,17 +10,20 @@ import (
 	"tomato/internal/repo"
 )
 
-// New creates a new cli application
 func New() *cli.App {
 	c := cli.NewApp()
 	c.Name = "tomato"
 	c.Version = "1.0.0"
-	c.Usage = "some text"
+	c.Usage = "Tomato is a tool for personal time management"
 
-	cfg := initConfig()
-	settings := initSettings(cfg.SettingsPath)
+	user := getCurrentUser()
+	configPath := os.Getenv("TOMATO_CONFIG_PATH")
+	if configPath == "" {
+		configPath = getUserConfigDir()
+	}
+	cfg := initConfig(configPath)
 	r := repo.New(initDBConnection(cfg.DBPath))
-	a := app.New(settings, r, getCurrentUser())
+	a := app.New(cfg, r, user)
 
 	commands := []*cli.Command{
 		{

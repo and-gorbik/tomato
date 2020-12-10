@@ -21,16 +21,16 @@ type App struct {
 	workingMinutes    int
 }
 
-func New(settings *models.Settings, repo repo, user string) *App {
+func New(cfg *models.Config, repo repo, user string) *App {
 	return &App{
 		repo:              repo,
 		user:              user,
-		taskfile:          TaskFile{Path: settings.CurrentTasksPath},
-		defaultTag:        settings.DefaultTag,
-		editorPath:        settings.EditorPath,
-		smallBreakMinutes: settings.Tomato.SmallBreakMinutes,
-		bigBreakMinutes:   settings.Tomato.BigBreakMinutes,
-		workingMinutes:    settings.Tomato.WorkingMinutes,
+		taskfile:          TaskFile{Path: cfg.CurrentTasksPath},
+		defaultTag:        cfg.DefaultTag,
+		editorPath:        cfg.EditorPath,
+		smallBreakMinutes: cfg.Tomato.SmallBreakMinutes,
+		bigBreakMinutes:   cfg.Tomato.BigBreakMinutes,
+		workingMinutes:    cfg.Tomato.WorkingMinutes,
 	}
 }
 

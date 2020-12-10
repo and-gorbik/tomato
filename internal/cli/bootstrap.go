@@ -8,23 +8,14 @@ import (
 	"path/filepath"
 
 	"tomato/internal/models"
+
+	_ "github.com/mattn/go-sqlite3" // sqlite3 driver
 )
 
-const (
-	ConfigPathEnv      = "TOMATO_CONFIG_PATH"
-	DefaultConfigPath  = "/etc/tomato/config.yaml"
-	DefaultCurrentPath = ".tomato/data/currentTasks~"
-)
-
-func initConfig() *models.Config {
-	path := os.Getenv(ConfigPathEnv)
-	if path == "" {
-		path = DefaultConfigPath
-	}
-
+func initConfig(path string) *models.Config {
 	var cfg models.Config
 	if err := readYaml(path, &cfg); err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to read the config: ", err)
 	}
 
 	return &cfg
@@ -33,36 +24,28 @@ func initConfig() *models.Config {
 func initDBConnection(dbPath string) *sql.DB {
 	dbConn, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
-		return nil
+		log.Fatal("Failed to init db connection: ", err)
 	}
 
 	return dbConn
 }
 
-func initSettings(path string) *models.Settings {
-	var settings models.Settings
-	if err := readYaml(path, &settings); err != nil {
-		log.Fatal(err)
-	}
-
-	if settings.EditorPath == "" {
-		settings.EditorPath = os.Getenv("EDITOR")
-	}
-
-	if settings.CurrentTasksPath == "" {
-		settings.CurrentTasksPath = filepath.Join(os.Getenv("HOME"), DefaultCurrentPath)
-	}
-
-	return &settings
-}
-
 func getCurrentUser() string {
 	u, err := user.Current()
 	if err != nil {
-		log.Fatal(u)
+		log.Fatal("Failed to get current user: ", err)
 	}
 
 	return u.Username
+}
+
+func getUserConfigDir() string {
+	configPath, err := os.UserConfigDir()
+	if err != nil {
+		log.Fatal("Failed to get user config directory: ", err)
+	}
+
+	return filepath.Join(configPath, "tomato/config.yaml")
 }
 
 func readYaml(path string, obj interface{}) error {
