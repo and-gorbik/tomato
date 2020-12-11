@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
+
 	"tomato/internal/models"
 )
 
@@ -78,8 +80,39 @@ func (t *TaskFile) Validate() error {
 }
 
 func (t *TaskFile) validate(src io.Reader) error {
-	if _, err := csv.NewReader(src).ReadAll(); err != nil {
+	lines, err := csv.NewReader(src).ReadAll()
+	if err != nil {
 		return err
+	}
+
+	// title;[tag;][count;][position;]
+	positions := make(map[int64]struct{})
+	for _, line := range lines {
+		switch len(line) {
+		case 1, 2:
+		case 3:
+			pos, err := strconv.ParseInt(line[2], 10, 32)
+			if err != nil {
+				return err
+			}
+			if _, ok := positions[pos]; ok {
+				return fmt.Errorf("Repeatable position: %d", pos)
+			}
+			positions[pos] = struct{}{}
+		case 4:
+			pos, err := strconv.ParseInt(line[2], 10, 32)
+			if err != nil {
+				return err
+			}
+			if _, ok := positions[pos]; ok {
+				return fmt.Errorf("Repeatable position: %d", pos)
+			}
+			positions[pos] = struct{}{}
+
+			if _, err := strconv.ParseInt(line[3], 10, 32); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
